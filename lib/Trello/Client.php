@@ -194,7 +194,7 @@ class Client implements ClientInterface
     public function getHttpClientWithAuth(string $tokenOrLogin, string $password)
     {
         if (null === $this->httpClient) {
-            $this->httpClient = HttpClient::createWithAuth($this->options, $tokenOrLogin, $password);
+            $this->httpClient = HttpClient::createWithAuth($tokenOrLogin, $password, $this->options);
         }
 
         return $this->httpClient;
