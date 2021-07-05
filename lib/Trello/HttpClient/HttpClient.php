@@ -6,11 +6,15 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Message\Request;
 use GuzzleHttp\Message\Response;
+use Psr\Http\Message\RequestInterface;
 use Trello\Exception\ErrorException;
 use Trello\Exception\RuntimeException;
 use Trello\HttpClient\Listener\AuthListener;
 use Trello\HttpClient\Listener\ErrorListener;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\HandlerStack;
+
 
 class HttpClient implements HttpClientInterface
 {
@@ -33,16 +37,40 @@ class HttpClient implements HttpClientInterface
 
     /**
      * @param array $options
-     * @param ClientInterface $client
      */
-    public function __construct(array $options = [], ClientInterface $client = null)
+    public function __construct(array $options = [], ?callable $middleware = null)
     {
-        $this->options = array_merge($this->options, $options);
-        $client = $client ?: new GuzzleClient($this->options);
+        $handler = HandlerStack::create();
+        $handler->push(Middleware::httpErrors(), 'http_errors');
+
+        if($middleware) {
+            $handler->push(Middleware::mapRequest($middleware));
+        }
+
+        $this->options = array_merge($this->options, $options, ['handler' => $handler]);
+        $client = new GuzzleClient($this->options);
+
         $this->client = $client;
 
-        $this->addListener('request.error', [new ErrorListener(), 'onRequestError']);
         $this->clearHeaders();
+    }
+
+    static public function createWithAuth(array $options = [], string $tokenOrLogin, string $password): self {
+        $authMiddleware = function (\GuzzleHttp\Psr7\Request $request) use($tokenOrLogin, $password) {
+            $uriInterface = $request->getUri();
+            $url = $uriInterface->getPath();
+
+            $parameters = [
+                'key' => $tokenOrLogin,
+                'token' => $password,
+            ];
+
+            $url .= (false === strpos($url, '?') ? '?' : '&');
+            $url .= utf8_encode(http_build_query($parameters, '', '&'));
+
+            return $request->withUri(new \GuzzleHttp\Psr7\Uri($url));
+        };
+        return new self($options, $authMiddleware);
     }
 
     /**
@@ -164,10 +192,6 @@ class HttpClient implements HttpClientInterface
      */
     public function authenticate($tokenOrLogin, $password, $method)
     {
-        $this->addListener('request.before_send', [
-            new AuthListener($tokenOrLogin, $password, $method),
-            'onRequestBeforeSend',
-        ]);
     }
 
     /**
@@ -201,9 +225,9 @@ class HttpClient implements HttpClientInterface
             $path .= utf8_encode(http_build_query($body, '', '&'));
         }
 
-        $options['body'] = $body;
+        $options['body'] = is_array($body) ? json_encode($body) : $body;
         $options['headers'] = array_merge($this->headers, $headers);
 
-        return $this->client->createRequest($httpMethod, $path, $options);
+        return $this->client->request($httpMethod, $path, $options);
     }
 }
