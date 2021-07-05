@@ -223,7 +223,7 @@ class HttpClient implements HttpClientInterface
         $body = is_array($body) ? json_encode($body) : $body;
         $options['body'] = is_array($body) ? json_encode($body) : $body;
         $options['headers'] = array_merge($this->headers, $headers);
-        $request = new GuzzleHttpRequest($httpMethod, 'https://api.trello.com/' . $path, $headers, $body);
+        $request = new GuzzleHttpRequest($httpMethod, $path, $headers, $body);
         return $request;
     }
 }
