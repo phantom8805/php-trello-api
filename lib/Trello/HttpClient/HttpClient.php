@@ -14,15 +14,12 @@ use Trello\HttpClient\Listener\ErrorListener;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\HandlerStack;
-
+use GuzzleHttp\Psr7\Request as GuzzleHttpRequest;
 
 class HttpClient implements HttpClientInterface
 {
     protected $options = [
-        'base_url' => 'https://api.trello.com/',
-        'user_agent' => 'php-trello-api (http://github.com/cdaguerre/php-trello-api)',
-        'timeout' => 10,
-        'api_version' => 1,
+        'base_uri' => 'https://trello.com/',
     ];
 
     /**
@@ -55,20 +52,20 @@ class HttpClient implements HttpClientInterface
         $this->clearHeaders();
     }
 
-    static public function createWithAuth(array $options = [], string $tokenOrLogin, string $password): self {
+    static public function createWithAuth(string $tokenOrLogin, string $password, array $options = []): self {
         $authMiddleware = function (\GuzzleHttp\Psr7\Request $request) use($tokenOrLogin, $password) {
-            $uriInterface = $request->getUri();
-            $url = $uriInterface->getPath();
-
             $parameters = [
                 'key' => $tokenOrLogin,
                 'token' => $password,
             ];
 
-            $url .= (false === strpos($url, '?') ? '?' : '&');
-            $url .= utf8_encode(http_build_query($parameters, '', '&'));
+            $query = '';
+            $query .= utf8_encode(http_build_query($parameters, '', '&'));
 
-            return $request->withUri(new \GuzzleHttp\Psr7\Uri($url));
+            $uri = $request->getUri();
+            $uri = $uri->withQuery($query);
+
+            return $request->withUri($uri);
         };
         return new self($options, $authMiddleware);
     }
@@ -96,7 +93,6 @@ class HttpClient implements HttpClientInterface
     {
         $this->headers = [
             'Accept' => sprintf('application/vnd.orcid.%s+json', $this->options['api_version']),
-            'User-Agent' => sprintf('%s', $this->options['user_agent']),
         ];
     }
 
@@ -174,7 +170,7 @@ class HttpClient implements HttpClientInterface
         $request = $this->createRequest($httpMethod, $path, $body, $headers, $options);
 
         try {
-            $response = $this->client->send($request);
+            $response = $this->client->send($request, ['verify' => false]);
         } catch (\LogicException $e) {
             throw new ErrorException($e->getMessage(), $e->getCode(), $e);
         } catch (\RuntimeException $e) {
@@ -224,10 +220,10 @@ class HttpClient implements HttpClientInterface
             $path .= (false === strpos($path, '?') ? '?' : '&');
             $path .= utf8_encode(http_build_query($body, '', '&'));
         }
-
+        $body = is_array($body) ? json_encode($body) : $body;
         $options['body'] = is_array($body) ? json_encode($body) : $body;
         $options['headers'] = array_merge($this->headers, $headers);
-
-        return $this->client->request($httpMethod, $path, $options);
+        $request = new GuzzleHttpRequest($httpMethod, 'https://api.trello.com/' . $path, $headers, $body);
+        return $request;
     }
 }
