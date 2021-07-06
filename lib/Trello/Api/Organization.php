@@ -53,4 +53,9 @@ class Organization extends AbstractApi
     {
         return $this->get($this->getPath() . '/' . rawurlencode($id), $params);
     }
+    
+    public function boards($id, array $params = [])
+    {
+        return $this->get($this->getPath() . '/' . rawurlencode($id) . '/boards', $params);
+    }
 }
