@@ -167,17 +167,16 @@ class HttpClient implements HttpClientInterface
      */
     public function request($path, $body = null, $httpMethod = 'GET', array $headers = [], array $options = [])
     {
-        $request = $this->createRequest($httpMethod, $path, $body, $headers, $options);
+        [$path, $options] = $this->buildPathAndOptions($httpMethod, $path, $body, $headers, $options);
 
         try {
-            $response = $this->client->send($request, ['verify' => false]);
+            $response = $this->client->request($httpMethod, $path, $options);
         } catch (\LogicException $e) {
             throw new ErrorException($e->getMessage(), $e->getCode(), $e);
         } catch (\RuntimeException $e) {
             throw new RuntimeException($e->getMessage(), $e->getCode(), $e);
         }
 
-        $this->lastRequest = $request;
         $this->lastResponse = $response;
 
         return $response;
@@ -210,9 +209,9 @@ class HttpClient implements HttpClientInterface
      * @param string $httpMethod
      * @param string $path
      *
-     * @return Request|\GuzzleHttp\Message\RequestInterface
+     * @return array
      */
-    protected function createRequest($httpMethod, $path, $body = null, array $headers = [], array $options = [])
+    protected function buildPathAndOptions($httpMethod, $path, $body = null, array $headers = [], array $options = [])
     {
         $path = $this->options['api_version'] . '/' . $path;
 
@@ -220,10 +219,10 @@ class HttpClient implements HttpClientInterface
             $path .= (false === strpos($path, '?') ? '?' : '&');
             $path .= utf8_encode(http_build_query($body, '', '&'));
         }
-        $body = is_array($body) ? json_encode($body) : $body;
-        $options['body'] = is_array($body) ? json_encode($body) : $body;
-        $options['headers'] = array_merge($this->headers, $headers);
-        $request = new GuzzleHttpRequest($httpMethod, $path, $headers, $body);
-        return $request;
+
+        $options['headers'] = $headers;
+        $options['form_params'] = $body;
+
+        return [$path, $options];
     }
 }
