@@ -58,4 +58,12 @@ class Organization extends AbstractApi
     {
         return $this->get($this->getPath() . '/' . rawurlencode($id) . '/boards', $params);
     }
+    
+    public function invite(string $id, string $email, string $fullName)
+    {
+        return $this->put($this->getPath() . '/' . rawurlencode($id) . '/members', [
+            'email'    => $email,
+            'fullName' => $fullName,
+        ]);
+    }
 }
