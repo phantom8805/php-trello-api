@@ -10,6 +10,13 @@ namespace Trello\Api;
  */
 class Organization extends AbstractApi
 {
+    const USER_TYPES = [
+        self::USER_TYPE_ADMIN,
+        self::USER_TYPE_NORMAL,
+    ];
+
+    const USER_TYPE_ADMIN = 'admin';
+    const USER_TYPE_NORMAL = 'normal';
     /**
      * Base path of organizations api
      * @var string
@@ -37,7 +44,7 @@ class Organization extends AbstractApi
         'url',
         'website',
         'logoHash',
-        'premiumFeatures'
+        'premiumFeatures',
     ];
 
     /**
@@ -45,7 +52,7 @@ class Organization extends AbstractApi
      * @link https://trello.com/docs/api/organization/#get-1-organizations-idorg-or-name
      *
      * @param string $id the organization's id
-     * @param array $params optional attributes
+     * @param array  $params optional attributes
      *
      * @return array
      */
@@ -53,17 +60,23 @@ class Organization extends AbstractApi
     {
         return $this->get($this->getPath() . '/' . rawurlencode($id), $params);
     }
-    
+
     public function boards($id, array $params = [])
     {
         return $this->get($this->getPath() . '/' . rawurlencode($id) . '/boards', $params);
     }
-    
-    public function invite(string $id, string $email, string $fullName)
+
+    public function members($id, array $params = [])
+    {
+        return $this->get($this->getPath() . '/' . rawurlencode($id) . '/memberships', [...$params, 'member' => true]);
+    }
+
+    public function invite(string $id, string $email, string $fullName, string $type)
     {
         return $this->put($this->getPath() . '/' . rawurlencode($id) . '/members', [
             'email'    => $email,
             'fullName' => $fullName,
+            'type'     => $type,
         ]);
     }
 }
