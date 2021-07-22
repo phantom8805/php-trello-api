@@ -18,6 +18,16 @@ namespace Trello\Api;
  */
 class Board extends AbstractApi
 {
+    const BOARD_PERMISSION_LEVELS = [
+        self::BOARD_PERMISSION_LEVEL_PUBLIC,
+        self::BOARD_PERMISSION_LEVEL_PRIVATE,
+        self::BOARD_PERMISSION_LEVEL_WORKSPACE,
+    ];
+
+    const BOARD_PERMISSION_LEVEL_PUBLIC = 'public';
+    const BOARD_PERMISSION_LEVEL_PRIVATE = 'private';
+    const BOARD_PERMISSION_LEVEL_WORKSPACE = 'org';
+
     /**
      * Base path of boards api
      * @var string
@@ -56,7 +66,7 @@ class Board extends AbstractApi
      * @link https://trello.com/docs/api/board/#get-1-boards-board-id
      *
      * @param string $id the board's id
-     * @param array $params optional attributes
+     * @param array  $params optional attributes
      *
      * @return array board info
      */
@@ -85,7 +95,7 @@ class Board extends AbstractApi
      * @link https://trello.com/docs/api/board/#put-1-boards
      *
      * @param string $id the board's id
-     * @param array $params board attributes to update
+     * @param array  $params board attributes to update
      *
      * @return array
      */
@@ -127,7 +137,7 @@ class Board extends AbstractApi
      * @link https://trello.com/docs/api/board/#put-1-boards-board-id-closed
      *
      * @param string $id the board's id
-     * @param bool $closed whether the board should be closed or not
+     * @param bool   $closed whether the board should be closed or not
      *
      * @return array
      */
@@ -141,7 +151,7 @@ class Board extends AbstractApi
      * @link https://trello.com/docs/api/board/#put-1-boards-board-id-subscribed
      *
      * @param string $id the board's id
-     * @param bool $subscribed whether to subscribe to the board or not
+     * @param bool   $subscribed whether to subscribe to the board or not
      *
      * @return array
      */
@@ -169,7 +179,7 @@ class Board extends AbstractApi
      * @link https://trello.com/docs/api/board/#get-1-boards-board-id-organization
      *
      * @param string $id the board's id
-     * @param array $params optional parameters
+     * @param array  $params optional parameters
      *
      * @return array
      */
@@ -199,7 +209,7 @@ class Board extends AbstractApi
      * @link https://trello.com/docs/api/board/#get-1-boards-board-id-boardstars
      *
      * @param string $id the board's id
-     * @param array $params optional parameters
+     * @param array  $params optional parameters
      *
      * @return array
      */
@@ -213,7 +223,7 @@ class Board extends AbstractApi
      * @link https://trello.com/docs/api/board/index.html#get-1-boards-board-id-deltas
      *
      * @param string $id the board's id
-     * @param array $params optional parameters
+     * @param array  $params optional parameters
      *
      * @return array
      */
