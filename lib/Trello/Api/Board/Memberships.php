@@ -20,4 +20,10 @@ class Memberships extends AbstractApi
      * @var string
      */
     protected $path = 'boards/#id#/memberships';
+
+
+    public function all($id, array $params = [])
+    {
+        return $this->get($this->getPath($id), $params);
+    }
 }
